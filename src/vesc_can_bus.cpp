@@ -4,15 +4,12 @@
 #include <mcp_can.h>
 #include <stdint.h>
 
-MCP_CAN CAN0(10);
+MCP_CAN CAN0(5);
 
 void init_vesc_can() {
-  // CAN0 = MCP_CAN(10);
   byte result = CAN0.begin(MCP_ANY, CAN_250KBPS, MCP_8MHZ);
-  Serial.printf("%0x\n", result);
   Serial.println(result == CAN_OK ? "CAN BUS Shield init ok!"
                                   : "CAN BUS Shield init fail");
-
   CAN0.setMode(MCP_NORMAL);
 }
 
@@ -142,4 +139,51 @@ void comm_can_set_handbrake_rel(uint8_t controller_id, float current_rel) {
   can_transmit_eid(controller_id |
                        ((uint32_t)CAN_PACKET_SET_CURRENT_HANDBRAKE_REL << 8),
                    buffer, send_index);
+}
+
+void comm_can_read(byte *buffer, byte size) {
+  ulong id = 0;
+  byte len = 0;
+  byte rxBuffer[128];
+  byte result = CAN0.readMsgBuf(&id, &len, rxBuffer);
+
+  if (result == CAN_NOMSG) {
+    return;
+  }
+
+  byte vesc_id = ((byte *)&id)[0];
+  byte command_id = ((byte *)&id)[1];
+
+  Serial.printf("vesc_id: : %0x | command_id %0x\n", vesc_id, command_id);
+
+  if (vesc_id == 0x0a) {
+    return;
+  }
+
+  switch (command_id) {
+  // see https://github.com/vedderb/bldc/blob/master/documentation/comm_can.md
+  // for documentation and structure of the status messages
+  case 0x10: {
+    CAN_PACKET_STATUS_4 status_4_temp;
+    status_4_temp.temp_fet = rxBuffer[0] << 8 | rxBuffer[1];
+    status_4_temp.temp_motor = rxBuffer[2] << 8 | rxBuffer[3];
+    status_4_temp.current_in = rxBuffer[4] << 8 | rxBuffer[5];
+    status_4_temp.pid_pos = rxBuffer[6] << 8 | rxBuffer[7];
+
+    Serial.printf("temp_fet: %d\n", status_4_temp.temp_fet);
+    Serial.printf("temp_motor: %d\n", status_4_temp.temp_motor);
+    Serial.printf("current_in: %d\n", status_4_temp.current_in);
+    Serial.printf("pid_pos: %d\n", status_4_temp.pid_pos);
+    break;
+  }
+
+  case 0x09: {
+    Serial.printf("Received status 9\n");
+    break;
+  }
+
+  default:
+    Serial.printf("Unknown command: %0x\n", command_id);
+    break;
+  }
 }

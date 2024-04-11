@@ -3,12 +3,14 @@
 
 #define THROTTLE_PIN 34
 #define BRAKE_PIN 35
+#define CAN0_INT 21
 
 void setup() {
-  Serial.begin(115200);
-
+  pinMode(CAN0_INT, INPUT);
   pinMode(THROTTLE_PIN, INPUT);
   pinMode(BRAKE_PIN, INPUT);
+
+  Serial.begin(115200);
 
   init_vesc_can();
 
@@ -18,6 +20,8 @@ void setup() {
 void loop() {
   Serial.printf("Throttle: %d\n", analogRead(THROTTLE_PIN));
   Serial.printf("Brake: %d\n", analogRead(BRAKE_PIN));
+
+  comm_can_read(0, 0);
 
   delay(50);
 }

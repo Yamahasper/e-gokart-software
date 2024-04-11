@@ -16,6 +16,53 @@ typedef enum {
   CAN_PACKET_MAKE_ENUM_32_BITS = 0xFFFFFFFF,
 } CAN_PACKET_ID;
 
+typedef enum {
+  MOTOR_CONTROLLER_LEFT = 0x0A,
+  MOTOR_CONTROLLER_RIGHT = 0x0B,
+} MOTOR_CONTROLLER_ID;
+
+struct CAN_PACKET_STATUS {
+  int32_t rpm;
+  int16_t current;
+  int16_t duty;
+} typedef CAN_PACKET_STATUS;
+
+struct CAN_PACKET_STATUS_2 {
+  int32_t amp_hours;
+  int32_t amp_hours_charged;
+} typedef CAN_PACKET_STATUS_2;
+
+struct CAN_PACKET_STATUS_3 {
+  int32_t watt_hours;
+  int32_t watt_hours_charged;
+} typedef CAN_PACKET_STATUS_3;
+
+struct CAN_PACKET_STATUS_4 {
+  int16_t temp_fet;
+  int16_t temp_motor;
+  int16_t current_in;
+  int16_t pid_pos;
+} typedef CAN_PACKET_STATUS_4;
+
+struct CAN_PACKET_STATUS_5 {
+  int32_t tachometer;
+  int16_t volt_in;
+} typedef CAN_PACKET_STATUS_5;
+
+struct controller_status {
+  int32_t rpm;
+  int16_t current;
+  int16_t duty;
+
+  int16_t temp_fet;
+  int16_t temp_motor;
+  int16_t current_in;
+  int16_t pid_pos;
+
+  int32_t tachometer;
+  int16_t volt_in;
+} typedef CAN_PACKET_STATUS_6;
+
 void init_vesc_can();
 
 void buffer_append_int16(uint8_t *buffer, int16_t number, int32_t *index);
@@ -52,4 +99,5 @@ void comm_can_set_handbrake(uint8_t controller_id, float current);
 
 void comm_can_set_handbrake_rel(uint8_t controller_id, float current_rel);
 
+void comm_can_read(uint8_t *rxBuffer, uint8_t size);
 #endif // VESC_CAN_BUS_H
